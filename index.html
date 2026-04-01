@@ -183,10 +183,10 @@
     <details>
       <summary style="cursor:pointer;font-size:16px;font-weight:600;color:#ff9900;display:flex;align-items:center;gap:8px;">
         <i class="fas fa-chevron-right" style="transition:transform 0.2s;font-size:12px;"></i>
-        <i class="fas fa-circle-question"></i> How to Use This Tool <span style="font-size:12px;font-weight:400;color:#6b7f95;margin-left:6px;">(click to expand)</span>
+        <i class="fas fa-circle-question"></i> How to Use This Tool <span style="font-size:12px;font-weight:400;color:var(--info-text);margin-left:6px;">(click to expand)</span>
       </summary>
-      <div style="margin-top:14px;font-size:13px;color:#8899aa;line-height:1.8;">
-        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-calendar-plus" style="color:#ff9900;margin-right:6px;"></i> Create Availability Grid Tab</p>
+      <div style="margin-top:14px;font-size:13px;color:var(--text);line-height:1.8;">
+        <p style="margin-bottom:10px;color:var(--text);font-weight:600;"><i class="fas fa-calendar-plus" style="color:#ff9900;margin-right:6px;"></i> Create Availability Grid Tab</p>
         <ol style="margin-left:20px;margin-bottom:16px;">
           <li>Enter the candidate's name and time zone</li>
           <li>Pick the dates the candidate is available — hour buttons appear automatically</li>
@@ -195,7 +195,7 @@
           <li>Upload the Excel to SharePoint and share the link with your interviewers</li>
           <li>Interviewers type their name (or alias) next to the time slots they're available. Add * for preferred times (e.g. "parinpo*")</li>
         </ol>
-        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-puzzle-piece" style="color:#ff9900;margin-right:6px;"></i> Build Schedule Tab</p>
+        <p style="margin-bottom:10px;color:var(--text);font-weight:600;"><i class="fas fa-puzzle-piece" style="color:#ff9900;margin-right:6px;"></i> Build Schedule Tab</p>
         <ol style="margin-left:20px;margin-bottom:16px;">
           <li>Download the filled-in Excel from SharePoint and upload it here</li>
           <li>Review the availability data — set each interviewer's role (Interviewer, Hiring Manager, or Bar Raiser)</li>
@@ -204,8 +204,8 @@
           <li>Click "Find Best Schedule" — the tool matches overlapping availability, prioritizing interviewers with the least options first</li>
           <li>Review the proposed schedule and copy to clipboard to share</li>
         </ol>
-        <p style="font-size:12px;color:#6b7f95;"><i class="fas fa-info-circle" style="margin-right:4px;"></i> Preferred times (*) are scheduled first. The tool can be re-run as more interviewers submit availability.</p>
-        <p style="margin-top:14px;color:#c8d3de;font-weight:600;"><i class="fas fa-download" style="color:#ff9900;margin-right:6px;"></i> Tampermonkey Script</p>
+        <p style="font-size:12px;color:var(--info-text);"><i class="fas fa-info-circle" style="margin-right:4px;"></i> Preferred times (*) are scheduled first. The tool can be re-run as more interviewers submit availability.</p>
+        <p style="margin-top:14px;color:var(--text);font-weight:600;"><i class="fas fa-download" style="color:#ff9900;margin-right:6px;"></i> Tampermonkey Script</p>
         <p style="margin-top:4px;">To auto-import loop structure from Hire, install this script in Tampermonkey:</p>
         <button class="btn-sm btn-secondary" onclick="downloadTampermonkeyScript()" style="margin-top:8px;"><i class="fas fa-download"></i> Download Hire Loop Scraper (.user.js)</button>
       </div>
@@ -313,9 +313,9 @@
     </div>
 
     <div class="card" id="loopCard" style="display:none;">
-      <h2><span class="step">3</span><i class="fas fa-paste"></i> Import Loop Structure <span style="font-size:12px;color:#6b7f95;font-weight:400;">(Optional)</span></h2>
+      <h2><span class="step">3</span><i class="fas fa-paste"></i> Import Loop Structure <span style="font-size:12px;color:var(--info-text);font-weight:400;">(Optional)</span></h2>
       <p class="info"><i class="fas fa-info-circle"></i> On the Hire loop page, click "Copy Loop Structure", then paste it into the box below (Ctrl+V).</p>
-      <textarea id="loopPasteBox" rows="4" placeholder="Paste loop data here, e.g.:&#10;HM: parinpo | Science Breadth, Earn Trust, Think Big&#10;BR: (unassigned) | Deliver Results, Bias for Action, Have Backbone&#10;IV: mehulz | Coding (DSA), Insist on Highest Standards, Ownership" style="width:100%;margin-top:10px;padding:10px 14px;font-size:13px;background:#0f1b2d;color:#e0e6ed;border:1px solid #2a3a4e;border-radius:6px;resize:vertical;font-family:monospace;"></textarea>
+      <textarea id="loopPasteBox" rows="4" placeholder="Paste loop data here, e.g.:&#10;HM: parinpo | Science Breadth, Earn Trust, Think Big&#10;BR: (unassigned) | Deliver Results, Bias for Action, Have Backbone&#10;IV: mehulz | Coding (DSA), Insist on Highest Standards, Ownership" style="width:100%;margin-top:10px;padding:10px 14px;font-size:13px;background:var(--input-bg);color:var(--input-text);border:1px solid var(--input-border);border-radius:6px;resize:vertical;font-family:monospace;"></textarea>
       <button class="btn-sm btn-secondary" onclick="importLoop()" style="margin-top:10px;"><i class="fas fa-clipboard"></i> Import Loop</button>
       <span id="pasteStatus" style="font-size:13px;margin-left:12px;"></span>
     </div>
