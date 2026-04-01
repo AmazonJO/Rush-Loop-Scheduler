@@ -223,53 +223,15 @@
       <h2><span class="step">1</span><i class="fas fa-user"></i> Candidate Info</h2>
       <label for="candName">Candidate Name</label>
       <input type="text" id="candName" placeholder="e.g. John Smith" style="width:280px;" />
-      <label for="candTz" style="margin-top:10px;">Time Zone</label>
-      <select id="candTz">
-        <optgroup label="Americas">
-          <option value="HST">HST (Hawaii)</option>
-          <option value="AKST">AKST (Alaska)</option>
-          <option value="PST">PST (Pacific)</option>
-          <option value="PDT">PDT (Pacific Daylight)</option>
-          <option value="MST">MST (Mountain)</option>
-          <option value="MDT">MDT (Mountain Daylight)</option>
-          <option value="CST">CST (Central)</option>
-          <option value="CDT">CDT (Central Daylight)</option>
-          <option value="EST" selected>EST (Eastern)</option>
-          <option value="EDT">EDT (Eastern Daylight)</option>
-          <option value="AST">AST (Atlantic)</option>
-          <option value="BRT">BRT (Brazil)</option>
-          <option value="ART">ART (Argentina)</option>
-        </optgroup>
-        <optgroup label="Europe / Africa">
-          <option value="GMT">GMT (Greenwich)</option>
-          <option value="WET">WET (Western Europe)</option>
-          <option value="CET">CET (Central Europe)</option>
-          <option value="CEST">CEST (Central Europe Summer)</option>
-          <option value="EET">EET (Eastern Europe)</option>
-          <option value="EEST">EEST (Eastern Europe Summer)</option>
-          <option value="CAT">CAT (Central Africa)</option>
-          <option value="SAST">SAST (South Africa)</option>
-        </optgroup>
-        <optgroup label="Asia / Middle East">
-          <option value="MSK">MSK (Moscow)</option>
-          <option value="GST">GST (Gulf)</option>
-          <option value="IST">IST (India)</option>
-          <option value="NPT">NPT (Nepal)</option>
-          <option value="BST">BST (Bangladesh)</option>
-          <option value="ICT">ICT (Indochina)</option>
-          <option value="CST-Asia">CST (China)</option>
-          <option value="JST">JST (Japan)</option>
-          <option value="KST">KST (Korea)</option>
-        </optgroup>
-        <optgroup label="Australia / Pacific">
-          <option value="AWST">AWST (Western Australia)</option>
-          <option value="ACST">ACST (Central Australia)</option>
-          <option value="AEST">AEST (Eastern Australia)</option>
-          <option value="AEDT">AEDT (Eastern Australia Daylight)</option>
-          <option value="NZST">NZST (New Zealand)</option>
-          <option value="NZDT">NZDT (New Zealand Daylight)</option>
-        </optgroup>
+      <label for="candRegion" style="margin-top:10px;">Region</label>
+      <select id="candRegion" onchange="updateTimezones()">
+        <option value="americas">Americas</option>
+        <option value="europe">Europe / Africa</option>
+        <option value="asia">Asia / Middle East</option>
+        <option value="pacific">Australia / Pacific</option>
       </select>
+      <label for="candTz" style="margin-top:8px;">Time Zone</label>
+      <select id="candTz"></select>
     </div>
 
     <div class="card">
@@ -363,6 +325,62 @@ if (localStorage.getItem('theme') === 'light') {
   document.body.classList.add('light');
   document.getElementById('themeIcon').className = 'fas fa-moon';
 }
+
+// ========== TIMEZONE SELECTOR ==========
+const TIMEZONE_DATA = {
+  americas: [
+    { value: 'Hawaii Time', label: 'Hawaii Time' },
+    { value: 'Alaska Time', label: 'Alaska Time' },
+    { value: 'Pacific Time', label: 'Pacific Time' },
+    { value: 'Mountain Time', label: 'Mountain Time' },
+    { value: 'Central Time', label: 'Central Time' },
+    { value: 'Eastern Time', label: 'Eastern Time', selected: true },
+    { value: 'Atlantic Time', label: 'Atlantic Time' },
+    { value: 'Brazil Time', label: 'Brazil Time' },
+    { value: 'Argentina Time', label: 'Argentina Time' }
+  ],
+  europe: [
+    { value: 'Greenwich Mean Time', label: 'Greenwich Mean Time' },
+    { value: 'Western Europe Time', label: 'Western Europe Time' },
+    { value: 'Central Europe Time', label: 'Central Europe Time' },
+    { value: 'Eastern Europe Time', label: 'Eastern Europe Time' },
+    { value: 'Central Africa Time', label: 'Central Africa Time' },
+    { value: 'South Africa Time', label: 'South Africa Time' }
+  ],
+  asia: [
+    { value: 'Moscow Time', label: 'Moscow Time' },
+    { value: 'Gulf Time', label: 'Gulf Time' },
+    { value: 'India Time', label: 'India Time' },
+    { value: 'Nepal Time', label: 'Nepal Time' },
+    { value: 'Bangladesh Time', label: 'Bangladesh Time' },
+    { value: 'Indochina Time', label: 'Indochina Time' },
+    { value: 'China Time', label: 'China Time' },
+    { value: 'Japan Time', label: 'Japan Time' },
+    { value: 'Korea Time', label: 'Korea Time' }
+  ],
+  pacific: [
+    { value: 'Western Australia Time', label: 'Western Australia Time' },
+    { value: 'Central Australia Time', label: 'Central Australia Time' },
+    { value: 'Eastern Australia Time', label: 'Eastern Australia Time' },
+    { value: 'New Zealand Time', label: 'New Zealand Time' }
+  ]
+};
+
+function updateTimezones() {
+  const region = document.getElementById('candRegion').value;
+  const tzSelect = document.getElementById('candTz');
+  const zones = TIMEZONE_DATA[region] || [];
+  tzSelect.innerHTML = '';
+  zones.forEach(tz => {
+    const opt = document.createElement('option');
+    opt.value = tz.value;
+    opt.textContent = tz.label;
+    if (tz.selected) opt.selected = true;
+    tzSelect.appendChild(opt);
+  });
+}
+// Initialize on load
+updateTimezones();
 
 // ========== DOWNLOAD TAMPERMONKEY SCRIPT ==========
 function downloadTampermonkeyScript() {
