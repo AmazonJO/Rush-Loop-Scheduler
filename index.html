@@ -7,40 +7,104 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #0f1b2d 0%, #1a2940 100%); color: #e0e6ed; min-height: 100vh; padding: 30px 20px; }
+
+    /* Theme variables */
+    :root {
+      --bg: linear-gradient(135deg, #0f1b2d 0%, #1a2940 100%);
+      --text: #ffffff;
+      --text-secondary: #ccd6e0;
+      --card-bg: #1e2d42;
+      --card-border: #2a3a4e;
+      --input-bg: #0f1b2d;
+      --input-text: #ffffff;
+      --input-border: #2a3a4e;
+      --tab-bg: #1a2940;
+      --tab-text: #8899aa;
+      --tab-hover-bg: #223350;
+      --tab-hover-text: #ccd6e0;
+      --table-border: #2a3a4e;
+      --table-cell: #ffffff;
+      --table-even: rgba(255,153,0,0.03);
+      --table-hover: rgba(255,153,0,0.07);
+      --hour-bg: #0f1b2d;
+      --hour-text: #ccd6e0;
+      --hour-border: #2a3a4e;
+      --comp-border: #2a3a4e;
+      --secondary-btn-bg: #2a3a4e;
+      --secondary-btn-text: #ffffff;
+      --footer-text: #8899aa;
+      --info-text: #a0aec0;
+      --label-text: #ccd6e0;
+      --file-text: #ccd6e0;
+    }
+
+    body.light {
+      --bg: linear-gradient(135deg, #f0f2f5 0%, #e8ecf1 100%);
+      --text: #1a1a1a;
+      --text-secondary: #333333;
+      --card-bg: #ffffff;
+      --card-border: #d0d5dd;
+      --input-bg: #f7f8fa;
+      --input-text: #1a1a1a;
+      --input-border: #d0d5dd;
+      --tab-bg: #e8ecf1;
+      --tab-text: #555555;
+      --tab-hover-bg: #dde1e8;
+      --tab-hover-text: #333333;
+      --table-border: #d0d5dd;
+      --table-cell: #1a1a1a;
+      --table-even: rgba(0,0,0,0.02);
+      --table-hover: rgba(255,153,0,0.08);
+      --hour-bg: #f7f8fa;
+      --hour-text: #333333;
+      --hour-border: #d0d5dd;
+      --comp-border: #d0d5dd;
+      --secondary-btn-bg: #e8ecf1;
+      --secondary-btn-text: #1a1a1a;
+      --footer-text: #666666;
+      --info-text: #555555;
+      --label-text: #333333;
+      --file-text: #333333;
+    }
+
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 30px 20px; transition: background 0.3s, color 0.3s; }
     .container { max-width: 1000px; margin: 0 auto; }
+
+    /* Theme toggle */
+    .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 999; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; }
+    .theme-toggle:hover { border-color: #ff9900; }
 
     /* Header */
     .header { text-align: center; margin-bottom: 30px; }
     .header .logo { font-size: 48px; margin-bottom: 8px; }
     .header h1 { font-size: 28px; color: #ff9900; font-weight: 700; letter-spacing: 0.5px; }
-    .header .subtitle { color: #8899aa; font-size: 15px; margin-top: 6px; }
+    .header .subtitle { color: var(--text-secondary); font-size: 15px; margin-top: 6px; }
 
     /* Tabs */
-    .tab-bar { display: flex; gap: 0; margin-bottom: 24px; border-radius: 8px; overflow: hidden; border: 1px solid #2a3a4e; }
-    .tab { flex: 1; padding: 14px 20px; cursor: pointer; font-size: 15px; font-weight: 600; background: #1a2940; color: #6b7f95; text-align: center; transition: all 0.2s; }
-    .tab:hover { background: #223350; color: #aab8c8; }
+    .tab-bar { display: flex; gap: 0; margin-bottom: 24px; border-radius: 8px; overflow: hidden; border: 1px solid var(--card-border); }
+    .tab { flex: 1; padding: 14px 20px; cursor: pointer; font-size: 15px; font-weight: 600; background: var(--tab-bg); color: var(--tab-text); text-align: center; transition: all 0.2s; }
+    .tab:hover { background: var(--tab-hover-bg); color: var(--tab-hover-text); }
     .tab.active { background: #ff9900; color: #111; }
     .tab i { margin-right: 8px; font-size: 16px; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
     /* Cards */
-    .card { background: #1e2d42; border-radius: 10px; padding: 24px; margin-bottom: 18px; border: 1px solid #2a3a4e; }
+    .card { background: var(--card-bg); border-radius: 10px; padding: 24px; margin-bottom: 18px; border: 1px solid var(--card-border); transition: background 0.3s, border 0.3s; }
     .card h2 { font-size: 17px; margin-bottom: 14px; color: #ff9900; display: flex; align-items: center; gap: 10px; }
     .card h2 i { font-size: 20px; }
     .card h2 .step { background: #ff9900; color: #111; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
 
     /* Form elements */
-    label { font-size: 13px; color: #8899aa; display: block; margin-bottom: 6px; }
+    label { font-size: 13px; color: var(--label-text); display: block; margin-bottom: 6px; }
     input[type="text"], input[type="date"], select {
-      padding: 10px 14px; font-size: 14px; border: 1px solid #2a3a4e; border-radius: 6px;
-      background: #0f1b2d; color: #e0e6ed; margin-bottom: 8px; outline: none; transition: border 0.2s;
+      padding: 10px 14px; font-size: 14px; border: 1px solid var(--input-border); border-radius: 6px;
+      background: var(--input-bg); color: var(--input-text); margin-bottom: 8px; outline: none; transition: border 0.2s, background 0.3s;
     }
     input[type="text"]:focus, input[type="date"]:focus, select:focus { border-color: #ff9900; }
     input[type="date"] { font-size: 16px; padding: 12px 16px; color: #ff9900; border: 2px solid #ff9900; cursor: pointer; }
     input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(70%) sepia(90%) saturate(500%) hue-rotate(360deg); cursor: pointer; font-size: 20px; }
-    input[type="file"] { margin-bottom: 12px; font-size: 13px; color: #8899aa; }
+    input[type="file"] { margin-bottom: 12px; font-size: 13px; color: var(--file-text); }
     select { cursor: pointer; }
 
     /* Buttons */
@@ -48,19 +112,19 @@
     button:hover { background: #ffad33; transform: translateY(-1px); }
     button:active { transform: translateY(0); }
     .btn-sm { padding: 8px 16px; font-size: 13px; }
-    .btn-secondary { background: #2a3a4e; color: #e0e6ed; }
-    .btn-secondary:hover { background: #3a4e65; }
+    .btn-secondary { background: var(--secondary-btn-bg); color: var(--secondary-btn-text); }
+    .btn-secondary:hover { background: var(--tab-hover-bg); }
 
     /* Info text */
-    .info { font-size: 13px; color: #6b7f95; margin-top: 10px; }
+    .info { font-size: 13px; color: var(--info-text); margin-top: 10px; }
     .info i { margin-right: 4px; }
 
     /* Tables */
     table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
     th { background: #ff9900; color: #111; padding: 10px 12px; text-align: left; font-weight: 700; }
-    td { padding: 10px 12px; border-bottom: 1px solid #2a3a4e; color: #c8d3de; }
-    tr:nth-child(even) { background: rgba(255,153,0,0.03); }
-    tr:hover { background: rgba(255,153,0,0.07); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--table-border); color: var(--table-cell); }
+    tr:nth-child(even) { background: var(--table-even); }
+    tr:hover { background: var(--table-hover); }
 
     /* Tags */
     .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 1px 3px; }
@@ -77,31 +141,38 @@
     /* Hour grid */
     .hour-grid { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
     .hour-btn {
-      padding: 8px 16px; font-size: 13px; border: 1px solid #2a3a4e; border-radius: 6px;
-      cursor: pointer; background: #0f1b2d; color: #8899aa; transition: all 0.2s; font-weight: 500;
+      padding: 8px 16px; font-size: 13px; border: 1px solid var(--hour-border); border-radius: 6px;
+      cursor: pointer; background: var(--hour-bg); color: var(--hour-text); transition: all 0.2s; font-weight: 500;
     }
     .hour-btn:hover { border-color: #ff9900; color: #ff9900; }
     .hour-btn.selected { background: #ff9900; color: #111; border-color: #ff9900; font-weight: 700; }
     .day-section { margin-bottom: 18px; }
-    .day-section h3 { font-size: 15px; margin-bottom: 8px; color: #c8d3de; display: flex; align-items: center; gap: 8px; }
+    .day-section h3 { font-size: 15px; margin-bottom: 8px; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .day-section h3 i { color: #ff9900; }
 
     /* Competency rows */
-    .comp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid #2a3a4e; }
+    .comp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--comp-border); }
     .comp-row:last-child { border-bottom: none; }
-    .comp-row .name-label { min-width: 160px; font-weight: 600; font-size: 14px; color: #e0e6ed; }
+    .comp-row .name-label { min-width: 160px; font-weight: 600; font-size: 14px; color: var(--text); }
 
     /* Copy button */
-    .copy-btn { font-size: 13px; padding: 8px 16px; background: #2a3a4e; color: #e0e6ed; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-    .copy-btn:hover { background: #3a4e65; }
+    .copy-btn { font-size: 13px; padding: 8px 16px; background: var(--secondary-btn-bg); color: var(--secondary-btn-text); border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: var(--tab-hover-bg); }
 
     /* Results */
     #results { display: none; }
     #results h3 { color: #ff9900; font-size: 18px; margin-bottom: 12px; }
+    details[open] summary .fa-chevron-right { transform: rotate(90deg); }
+    details summary:hover { opacity: 0.85; }
+    .btn-primary-lg { font-size: 18px; padding: 16px 36px; border-radius: 8px; letter-spacing: 0.3px; }
   </style>
 </head>
 <body>
 <div class="container">
+  <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+    <i class="fas fa-sun" id="themeIcon"></i>
+  </div>
+
   <div class="header">
     <div class="logo"><i class="fas fa-bolt" style="color:#ff9900;"></i></div>
     <h1>Rush Loop Scheduler</h1>
@@ -111,10 +182,11 @@
   <div class="card" style="border: 1px solid #ff990033;">
     <details>
       <summary style="cursor:pointer;font-size:16px;font-weight:600;color:#ff9900;display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-circle-question"></i> How to Use This Tool
+        <i class="fas fa-chevron-right" style="transition:transform 0.2s;font-size:12px;"></i>
+        <i class="fas fa-circle-question"></i> How to Use This Tool <span style="font-size:12px;font-weight:400;color:#6b7f95;margin-left:6px;">(click to expand)</span>
       </summary>
       <div style="margin-top:14px;font-size:13px;color:#8899aa;line-height:1.8;">
-        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-calendar-plus" style="color:#ff9900;margin-right:6px;"></i> Generate Template Tab</p>
+        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-calendar-plus" style="color:#ff9900;margin-right:6px;"></i> Create Availability Grid Tab</p>
         <ol style="margin-left:20px;margin-bottom:16px;">
           <li>Enter the candidate's name and time zone</li>
           <li>Pick the dates the candidate is available — hour buttons appear automatically</li>
@@ -123,14 +195,14 @@
           <li>Upload the Excel to SharePoint and share the link with your interviewers</li>
           <li>Interviewers type their name (or alias) next to the time slots they're available. Add * for preferred times (e.g. "parinpo*")</li>
         </ol>
-        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-puzzle-piece" style="color:#ff9900;margin-right:6px;"></i> Match Schedule Tab</p>
+        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-puzzle-piece" style="color:#ff9900;margin-right:6px;"></i> Build Schedule Tab</p>
         <ol style="margin-left:20px;margin-bottom:16px;">
           <li>Download the filled-in Excel from SharePoint and upload it here</li>
           <li>Review the availability data — set each interviewer's role (Interviewer, Hiring Manager, or Bar Raiser)</li>
           <li>(Optional) If you have the Hire Loop Scraper Tampermonkey script, paste the loop JSON to auto-fill roles and competencies</li>
           <li>Assign 3 competencies per interviewer using the dropdowns</li>
           <li>Click "Find Best Schedule" — the tool matches overlapping availability, prioritizing interviewers with the least options first</li>
-          <li>Copy the final schedule to clipboard and share</li>
+          <li>Review the proposed schedule and copy to clipboard to share</li>
         </ol>
         <p style="font-size:12px;color:#6b7f95;"><i class="fas fa-info-circle" style="margin-right:4px;"></i> Preferred times (*) are scheduled first. The tool can be re-run as more interviewers submit availability.</p>
         <p style="margin-top:14px;color:#c8d3de;font-weight:600;"><i class="fas fa-download" style="color:#ff9900;margin-right:6px;"></i> Tampermonkey Script</p>
@@ -141,8 +213,8 @@
   </div>
 
   <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('generate')"><i class="fas fa-calendar-plus"></i>Generate Template</div>
-    <div class="tab" onclick="switchTab('match')"><i class="fas fa-puzzle-piece"></i>Match Schedule</div>
+    <div class="tab active" onclick="switchTab('generate')"><i class="fas fa-calendar-plus"></i>Create Availability Grid</div>
+    <div class="tab" onclick="switchTab('match')"><i class="fas fa-puzzle-piece"></i>Build Schedule</div>
   </div>
 
   <!-- TAB 1: Generate Template -->
@@ -214,7 +286,7 @@
     </div>
 
     <div class="card" style="text-align:center;">
-      <button onclick="generateTemplate()"><i class="fas fa-download"></i> Download Excel Template</button>
+      <button class="btn-primary-lg" onclick="generateTemplate()"><i class="fas fa-download"></i> Download Availability Grid</button>
       <p class="info"><i class="fas fa-info-circle"></i> Upload this to SharePoint and share with your interviewers.</p>
     </div>
   </div>
@@ -222,9 +294,9 @@
   <!-- TAB 2: Match Schedule -->
   <div class="tab-content" id="tab-match">
     <div class="card" style="border-left: 3px solid #ff9900;">
-      <p style="font-size:14px;color:#c8d3de;line-height:1.7;">
+      <p style="font-size:14px;color:var(--text);line-height:1.7;">
         <i class="fas fa-route" style="color:#ff9900;margin-right:6px;"></i>
-        Upload the filled-in availability Excel from SharePoint. Once uploaded, the tool will display all interviewer availability, let you assign roles and competencies, then automatically find the best schedule by matching overlapping time slots.
+        Upload the filled-in availability Excel from SharePoint. Once uploaded, the tool will begin the matching process — assign roles and competencies, then automatically find the best schedule by matching overlapping time slots.
       </p>
     </div>
 
@@ -268,8 +340,30 @@
   </div>
 </div>
 
+<footer style="text-align:center;padding:30px 20px 20px;color:#4a5568;font-size:12px;">
+  <span style="color:#ff9900;">⚡</span> <strong>Built by AWS TA Vibers</strong> <span style="color:#4a5568;margin:0 6px;">|</span> v1.0
+</footer>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+// ========== THEME TOGGLE ==========
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  const icon = document.getElementById('themeIcon');
+  if (document.body.classList.contains('light')) {
+    icon.className = 'fas fa-moon';
+    localStorage.setItem('theme', 'light');
+  } else {
+    icon.className = 'fas fa-sun';
+    localStorage.setItem('theme', 'dark');
+  }
+}
+// Load saved theme
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.getElementById('themeIcon').className = 'fas fa-moon';
+}
+
 // ========== DOWNLOAD TAMPERMONKEY SCRIPT ==========
 function downloadTampermonkeyScript() {
   const script = `// ==UserScript==
