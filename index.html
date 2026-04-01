@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rush Loop Scheduler</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #0f1b2d 0%, #1a2940 100%); color: #e0e6ed; min-height: 100vh; padding: 30px 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 30px; }
+    .header .logo { font-size: 48px; margin-bottom: 8px; }
+    .header h1 { font-size: 28px; color: #ff9900; font-weight: 700; letter-spacing: 0.5px; }
+    .header .subtitle { color: #8899aa; font-size: 15px; margin-top: 6px; }
+
+    /* Tabs */
+    .tab-bar { display: flex; gap: 0; margin-bottom: 24px; border-radius: 8px; overflow: hidden; border: 1px solid #2a3a4e; }
+    .tab { flex: 1; padding: 14px 20px; cursor: pointer; font-size: 15px; font-weight: 600; background: #1a2940; color: #6b7f95; text-align: center; transition: all 0.2s; }
+    .tab:hover { background: #223350; color: #aab8c8; }
+    .tab.active { background: #ff9900; color: #111; }
+    .tab i { margin-right: 8px; font-size: 16px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Cards */
+    .card { background: #1e2d42; border-radius: 10px; padding: 24px; margin-bottom: 18px; border: 1px solid #2a3a4e; }
+    .card h2 { font-size: 17px; margin-bottom: 14px; color: #ff9900; display: flex; align-items: center; gap: 10px; }
+    .card h2 i { font-size: 20px; }
+    .card h2 .step { background: #ff9900; color: #111; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+
+    /* Form elements */
+    label { font-size: 13px; color: #8899aa; display: block; margin-bottom: 6px; }
+    input[type="text"], input[type="date"], select {
+      padding: 10px 14px; font-size: 14px; border: 1px solid #2a3a4e; border-radius: 6px;
+      background: #0f1b2d; color: #e0e6ed; margin-bottom: 8px; outline: none; transition: border 0.2s;
+    }
+    input[type="text"]:focus, input[type="date"]:focus, select:focus { border-color: #ff9900; }
+    input[type="date"] { font-size: 16px; padding: 12px 16px; color: #ff9900; border: 2px solid #ff9900; cursor: pointer; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(70%) sepia(90%) saturate(500%) hue-rotate(360deg); cursor: pointer; font-size: 20px; }
+    input[type="file"] { margin-bottom: 12px; font-size: 13px; color: #8899aa; }
+    select { cursor: pointer; }
+
+    /* Buttons */
+    button { background: #ff9900; color: #111; border: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; cursor: pointer; font-weight: 700; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    button:hover { background: #ffad33; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+    .btn-secondary { background: #2a3a4e; color: #e0e6ed; }
+    .btn-secondary:hover { background: #3a4e65; }
+
+    /* Info text */
+    .info { font-size: 13px; color: #6b7f95; margin-top: 10px; }
+    .info i { margin-right: 4px; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+    th { background: #ff9900; color: #111; padding: 10px 12px; text-align: left; font-weight: 700; }
+    td { padding: 10px 12px; border-bottom: 1px solid #2a3a4e; color: #c8d3de; }
+    tr:nth-child(even) { background: rgba(255,153,0,0.03); }
+    tr:hover { background: rgba(255,153,0,0.07); }
+
+    /* Tags */
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 1px 3px; }
+    .tag-comp { background: rgba(99,179,237,0.15); color: #63b3ed; }
+    .tag-hm { background: rgba(255,153,0,0.2); color: #ff9900; }
+    .tag-br { background: rgba(72,187,120,0.2); color: #48bb78; }
+
+    /* Status messages */
+    .status { margin-top: 14px; padding: 12px 16px; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .status-success { background: rgba(72,187,120,0.15); color: #48bb78; border: 1px solid rgba(72,187,120,0.3); }
+    .status-warning { background: rgba(237,187,52,0.15); color: #edbb34; border: 1px solid rgba(237,187,52,0.3); }
+    .status-error { background: rgba(245,101,101,0.15); color: #f56565; border: 1px solid rgba(245,101,101,0.3); }
+
+    /* Hour grid */
+    .hour-grid { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .hour-btn {
+      padding: 8px 16px; font-size: 13px; border: 1px solid #2a3a4e; border-radius: 6px;
+      cursor: pointer; background: #0f1b2d; color: #8899aa; transition: all 0.2s; font-weight: 500;
+    }
+    .hour-btn:hover { border-color: #ff9900; color: #ff9900; }
+    .hour-btn.selected { background: #ff9900; color: #111; border-color: #ff9900; font-weight: 700; }
+    .day-section { margin-bottom: 18px; }
+    .day-section h3 { font-size: 15px; margin-bottom: 8px; color: #c8d3de; display: flex; align-items: center; gap: 8px; }
+    .day-section h3 i { color: #ff9900; }
+
+    /* Competency rows */
+    .comp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid #2a3a4e; }
+    .comp-row:last-child { border-bottom: none; }
+    .comp-row .name-label { min-width: 160px; font-weight: 600; font-size: 14px; color: #e0e6ed; }
+
+    /* Copy button */
+    .copy-btn { font-size: 13px; padding: 8px 16px; background: #2a3a4e; color: #e0e6ed; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { background: #3a4e65; }
+
+    /* Results */
+    #results { display: none; }
+    #results h3 { color: #ff9900; font-size: 18px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo"><i class="fas fa-bolt" style="color:#ff9900;"></i></div>
+    <h1>Rush Loop Scheduler</h1>
+    <p class="subtitle">Fast-track interview scheduling when every hour counts</p>
+  </div>
+
+  <div class="card" style="border: 1px solid #ff990033;">
+    <details>
+      <summary style="cursor:pointer;font-size:16px;font-weight:600;color:#ff9900;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-circle-question"></i> How to Use This Tool
+      </summary>
+      <div style="margin-top:14px;font-size:13px;color:#8899aa;line-height:1.8;">
+        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-calendar-plus" style="color:#ff9900;margin-right:6px;"></i> Generate Template Tab</p>
+        <ol style="margin-left:20px;margin-bottom:16px;">
+          <li>Enter the candidate's name and time zone</li>
+          <li>Pick the dates the candidate is available — hour buttons appear automatically</li>
+          <li>Click the hours the candidate is free</li>
+          <li>Click "Download Excel Template" — this creates the availability grid</li>
+          <li>Upload the Excel to SharePoint and share the link with your interviewers</li>
+          <li>Interviewers type their name (or alias) next to the time slots they're available. Add * for preferred times (e.g. "parinpo*")</li>
+        </ol>
+        <p style="margin-bottom:10px;color:#c8d3de;font-weight:600;"><i class="fas fa-puzzle-piece" style="color:#ff9900;margin-right:6px;"></i> Match Schedule Tab</p>
+        <ol style="margin-left:20px;margin-bottom:16px;">
+          <li>Download the filled-in Excel from SharePoint and upload it here</li>
+          <li>Review the availability data — set each interviewer's role (Interviewer, Hiring Manager, or Bar Raiser)</li>
+          <li>(Optional) If you have the Hire Loop Scraper Tampermonkey script, paste the loop JSON to auto-fill roles and competencies</li>
+          <li>Assign 3 competencies per interviewer using the dropdowns</li>
+          <li>Click "Find Best Schedule" — the tool matches overlapping availability, prioritizing interviewers with the least options first</li>
+          <li>Copy the final schedule to clipboard and share</li>
+        </ol>
+        <p style="font-size:12px;color:#6b7f95;"><i class="fas fa-info-circle" style="margin-right:4px;"></i> Preferred times (*) are scheduled first. The tool can be re-run as more interviewers submit availability.</p>
+        <p style="margin-top:14px;color:#c8d3de;font-weight:600;"><i class="fas fa-download" style="color:#ff9900;margin-right:6px;"></i> Tampermonkey Script</p>
+        <p style="margin-top:4px;">To auto-import loop structure from Hire, install this script in Tampermonkey:</p>
+        <button class="btn-sm btn-secondary" onclick="downloadTampermonkeyScript()" style="margin-top:8px;"><i class="fas fa-download"></i> Download Hire Loop Scraper (.user.js)</button>
+      </div>
+    </details>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('generate')"><i class="fas fa-calendar-plus"></i>Generate Template</div>
+    <div class="tab" onclick="switchTab('match')"><i class="fas fa-puzzle-piece"></i>Match Schedule</div>
+  </div>
+
+  <!-- TAB 1: Generate Template -->
+  <div class="tab-content active" id="tab-generate">
+    <div class="card">
+      <h2><span class="step">1</span><i class="fas fa-user"></i> Candidate Info</h2>
+      <label for="candName">Candidate Name</label>
+      <input type="text" id="candName" placeholder="e.g. John Smith" style="width:280px;" />
+      <label for="candTz" style="margin-top:10px;">Time Zone</label>
+      <select id="candTz">
+        <optgroup label="Americas">
+          <option value="HST">HST (Hawaii)</option>
+          <option value="AKST">AKST (Alaska)</option>
+          <option value="PST">PST (Pacific)</option>
+          <option value="PDT">PDT (Pacific Daylight)</option>
+          <option value="MST">MST (Mountain)</option>
+          <option value="MDT">MDT (Mountain Daylight)</option>
+          <option value="CST">CST (Central)</option>
+          <option value="CDT">CDT (Central Daylight)</option>
+          <option value="EST" selected>EST (Eastern)</option>
+          <option value="EDT">EDT (Eastern Daylight)</option>
+          <option value="AST">AST (Atlantic)</option>
+          <option value="BRT">BRT (Brazil)</option>
+          <option value="ART">ART (Argentina)</option>
+        </optgroup>
+        <optgroup label="Europe / Africa">
+          <option value="GMT">GMT (Greenwich)</option>
+          <option value="WET">WET (Western Europe)</option>
+          <option value="CET">CET (Central Europe)</option>
+          <option value="CEST">CEST (Central Europe Summer)</option>
+          <option value="EET">EET (Eastern Europe)</option>
+          <option value="EEST">EEST (Eastern Europe Summer)</option>
+          <option value="CAT">CAT (Central Africa)</option>
+          <option value="SAST">SAST (South Africa)</option>
+        </optgroup>
+        <optgroup label="Asia / Middle East">
+          <option value="MSK">MSK (Moscow)</option>
+          <option value="GST">GST (Gulf)</option>
+          <option value="IST">IST (India)</option>
+          <option value="NPT">NPT (Nepal)</option>
+          <option value="BST">BST (Bangladesh)</option>
+          <option value="ICT">ICT (Indochina)</option>
+          <option value="CST-Asia">CST (China)</option>
+          <option value="JST">JST (Japan)</option>
+          <option value="KST">KST (Korea)</option>
+        </optgroup>
+        <optgroup label="Australia / Pacific">
+          <option value="AWST">AWST (Western Australia)</option>
+          <option value="ACST">ACST (Central Australia)</option>
+          <option value="AEST">AEST (Eastern Australia)</option>
+          <option value="AEDT">AEDT (Eastern Australia Daylight)</option>
+          <option value="NZST">NZST (New Zealand)</option>
+          <option value="NZDT">NZDT (New Zealand Daylight)</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">2</span><i class="fas fa-clock"></i> Available Dates & Hours</h2>
+      <label for="addDate">Pick a date to add availability</label>
+      <input type="date" id="addDate" onchange="addDate()" />
+      <div id="dateSlots"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3</span><i class="fas fa-columns"></i> Interviewer Columns</h2>
+      <label for="numCols">How many interviewer columns?</label>
+      <input type="text" id="numCols" value="7" style="width:70px;" />
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <button onclick="generateTemplate()"><i class="fas fa-download"></i> Download Excel Template</button>
+      <p class="info"><i class="fas fa-info-circle"></i> Upload this to SharePoint and share with your interviewers.</p>
+    </div>
+  </div>
+
+  <!-- TAB 2: Match Schedule -->
+  <div class="tab-content" id="tab-match">
+    <div class="card">
+      <h2><span class="step">1</span><i class="fas fa-file-upload"></i> Upload Availability</h2>
+      <label for="fileInput">Select the filled-in .xlsx from SharePoint</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+      <p class="info"><i class="fas fa-info-circle"></i> This should be the template after interviewers have added their names.</p>
+    </div>
+
+    <div class="card" id="previewCard" style="display:none;">
+      <h2><span class="step">2</span><i class="fas fa-table"></i> Review Availability</h2>
+      <div id="preview"></div>
+    </div>
+
+    <div class="card" id="loopCard" style="display:none;">
+      <h2><span class="step">3</span><i class="fas fa-paste"></i> Import Loop Structure <span style="font-size:12px;color:#6b7f95;font-weight:400;">(Optional)</span></h2>
+      <p class="info"><i class="fas fa-info-circle"></i> On the Hire loop page, click "Copy Loop Structure", then paste it into the box below (Ctrl+V).</p>
+      <textarea id="loopPasteBox" rows="4" placeholder="Paste loop data here, e.g.:&#10;HM: parinpo | Science Breadth, Earn Trust, Think Big&#10;BR: (unassigned) | Deliver Results, Bias for Action, Have Backbone&#10;IV: mehulz | Coding (DSA), Insist on Highest Standards, Ownership" style="width:100%;margin-top:10px;padding:10px 14px;font-size:13px;background:#0f1b2d;color:#e0e6ed;border:1px solid #2a3a4e;border-radius:6px;resize:vertical;font-family:monospace;"></textarea>
+      <button class="btn-sm btn-secondary" onclick="importLoop()" style="margin-top:10px;"><i class="fas fa-clipboard"></i> Import Loop</button>
+      <span id="pasteStatus" style="font-size:13px;margin-left:12px;"></span>
+    </div>
+
+    <div class="card" id="compCard" style="display:none;">
+      <h2><span class="step">4</span><i class="fas fa-list-check"></i> Assign Competencies</h2>
+      <p class="info"><i class="fas fa-info-circle"></i> Select 3 competencies per interviewer. If imported from Hire, these may already be filled.</p>
+      <div id="compAssign" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card" id="matchCard" style="display:none;">
+      <h2><span class="step">5</span><i class="fas fa-wand-magic-sparkles"></i> Match Schedule</h2>
+      <p class="info"><i class="fas fa-info-circle"></i> Prioritizes least availability first. Preferred times (*) are weighted higher.</p>
+      <button onclick="matchSchedule()" style="margin-top:10px;"><i class="fas fa-bolt"></i> Find Best Schedule</button>
+      <div id="matchStatus"></div>
+    </div>
+
+    <div class="card" id="results">
+      <h2><span class="step">6</span><i class="fas fa-calendar-check"></i> Proposed Schedule</h2>
+      <div id="scheduleOutput"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ========== DOWNLOAD TAMPERMONKEY SCRIPT ==========
+function downloadTampermonkeyScript() {
+  const script = `// ==UserScript==
+// @name         Hire Loop Structure Scraper
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Copy loop structure (interviewers, roles, competencies) from Hire to clipboard
+// @match        https://hire.amazon.com/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+  'use strict';
+  const DELAY_MS = 3000;
+
+  function scrapeLoop() {
+    const interviews = [];
+    const sections = document.querySelectorAll('[class*="interview-section"], [class*="InterviewCard"], [class*="interview-card"], [data-testid*="interview"]');
+    let interviewSections = sections.length > 0 ? sections : [];
+    if (interviewSections.length === 0) {
+      const allHeaders = document.querySelectorAll('h2, h3, h4, [class*="header"], [class*="Header"], [role="heading"]');
+      const headerEls = Array.from(allHeaders).filter(el => /interview\\\\s*\\\\d/i.test(el.innerText));
+      interviewSections = headerEls.map(h => { let p = h.parentElement; for (let i = 0; i < 3; i++) { if (p && p.parentElement) p = p.parentElement; } return p; });
+    }
+    if (interviewSections.length === 0) {
+      interviewSections = document.querySelectorAll('[class*="accordion"], [class*="Accordion"], [class*="panel"], [class*="Panel"]');
+    }
+    interviewSections.forEach((section, idx) => {
+      const text = section.innerText || '';
+      let role = 'Interviewer';
+      if (/hiring\\\\s*manager/i.test(text)) role = 'Hiring Manager';
+      if (/bar\\\\s*raiser/i.test(text)) role = 'Bar Raiser';
+      const compEls = section.querySelectorAll('[class*="tag"], [class*="Tag"], [class*="chip"], [class*="Chip"], [class*="badge"], [class*="Badge"]');
+      let competencies = [];
+      compEls.forEach(el => { const c = el.innerText.replace(/[\\\\u00d7\\\\u2715x]$/i, '').trim(); if (c && c.length > 2 && !/selected|competenc/i.test(c)) competencies.push(c); });
+      competencies = [...new Set(competencies)];
+      const nameEls = section.querySelectorAll('[class*="interviewer-name"], [class*="InterviewerName"], a[href*="phonetool"], a[href*="directory"]');
+      const interviewers = [];
+      nameEls.forEach(el => { const n = el.innerText.trim(); if (n && n.length > 1) { const row = el.closest('div, tr, li'); const pref = row ? /preferred/i.test(row.innerText) : false; interviewers.push({ name: n, preferred: pref }); } });
+      if (competencies.length > 0 || interviewers.length > 0) interviews.push({ interview: idx + 1, role, competencies, interviewers });
+    });
+    return interviews;
+  }
+
+  function formatLoop(data) {
+    return data.map(d => {
+      const roleCode = d.role === 'Hiring Manager' ? 'HM' : d.role === 'Bar Raiser' ? 'BR' : 'IV';
+      const names = d.interviewers.length > 0 ? d.interviewers.map(i => i.name).join(', ') : '(unassigned)';
+      return roleCode + ': ' + names + ' | ' + d.competencies.join(', ');
+    }).join('\\n');
+  }
+
+  function addCopyButton() {
+    const btn = document.createElement('button');
+    btn.innerText = '\\\\ud83d\\\\udccb Copy Loop Structure';
+    btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;background:#ff9900;color:#111;border:none;padding:12px 20px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+    btn.addEventListener('click', () => {
+      const data = scrapeLoop();
+      if (data.length === 0) { btn.innerText = 'No loop data found'; setTimeout(() => btn.innerText = 'Copy Loop Structure', 3000); return; }
+      navigator.clipboard.writeText(formatLoop(data)).then(() => { btn.innerText = 'Copied!'; setTimeout(() => btn.innerText = 'Copy Loop Structure', 2000); });
+    });
+    document.body.appendChild(btn);
+  }
+  setTimeout(addCopyButton, DELAY_MS);
+})();`;
+
+  const blob = new Blob([script], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hire-loop-scraper.user.js';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ========== TAB SWITCHING ==========
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  if (tab === 'generate') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('tab-generate').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('tab-match').classList.add('active');
+  }
+}
+
+// ========== GENERATE TEMPLATE ==========
+const selectedDates = {};
+
+function addDate() {
+  const input = document.getElementById('addDate');
+  const dateVal = input.value;
+  if (!dateVal || selectedDates[dateVal]) return;
+  selectedDates[dateVal] = [];
+  renderDateSlots();
+  input.value = '';
+}
+
+function renderDateSlots() {
+  const container = document.getElementById('dateSlots');
+  let html = '';
+  Object.keys(selectedDates).sort().forEach(dateStr => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    html += '<div class="day-section"><h3><i class="fas fa-calendar-day"></i> ' + label + '</h3><div class="hour-grid">';
+    for (let h = 8; h <= 17; h++) {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h > 12 ? h - 12 : h;
+      const lbl = h12 + ':00 ' + ampm;
+      const sel = selectedDates[dateStr].includes(h) ? 'selected' : '';
+      html += '<div class="hour-btn ' + sel + '" onclick="toggleHour(\'' + dateStr + '\',' + h + ',this)">' + lbl + '</div>';
+    }
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function toggleHour(dateStr, hour, el) {
+  const idx = selectedDates[dateStr].indexOf(hour);
+  if (idx >= 0) { selectedDates[dateStr].splice(idx, 1); el.classList.remove('selected'); }
+  else { selectedDates[dateStr].push(hour); selectedDates[dateStr].sort((a, b) => a - b); el.classList.add('selected'); }
+}
+
+function generateTemplate() {
+  const candName = document.getElementById('candName').value.trim() || 'Candidate';
+  const tz = document.getElementById('candTz').value;
+  const numCols = parseInt(document.getElementById('numCols').value) || 7;
+  const rows = [];
+  const candRow = ['Candidate: ' + candName];
+  rows.push(candRow);
+  rows.push([]);
+
+  Object.keys(selectedDates).sort().forEach(dateStr => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const dayLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    const dayRow = [dayLabel];
+    for (let i = 0; i < numCols; i++) {
+      if (i === 0) dayRow.push('Interviewer 1 (HM)');
+      else if (i === 1) dayRow.push('Interviewer 2 (BR)');
+      else dayRow.push('Interviewer ' + (i + 1));
+    }
+    rows.push(dayRow);
+    selectedDates[dateStr].forEach(h => {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h > 12 ? h - 12 : h;
+      const timeLabel = h12 + ':00 ' + ampm + ' ' + tz;
+      const row = [timeLabel];
+      for (let i = 0; i < numCols; i++) row.push('');
+      rows.push(row);
+    });
+    rows.push([]);
+  });
+  rows.push(['*Preferred Time']);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const colWidths = [{ wch: 22 }];
+  for (let i = 0; i < numCols; i++) colWidths.push({ wch: 16 });
+  ws['!cols'] = colWidths;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Availability');
+  XLSX.writeFile(wb, 'rush-loop-' + candName.replace(/\s+/g, '-').toLowerCase() + '.xlsx');
+}
+
+// ========== MATCH SCHEDULE ==========
+const COMPETENCIES = [
+  'Customer Obsession', 'Ownership', 'Invent and Simplify', 'Are Right, A Lot',
+  'Learn and Be Curious', 'Hire and Develop the Best', 'Insist on the Highest Standards',
+  'Think Big', 'Bias for Action', 'Frugality', 'Earn Trust', 'Dive Deep',
+  'Have Backbone; Disagree and Commit', 'Deliver Results', "Strive to be Earth's Best Employer",
+  'Success and Scale Bring Broad Responsibility'
+];
+
+let gridData = { candidateName: '', slots: [], interviewers: {} };
+
+document.getElementById('fileInput').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (evt) {
+    const data = new Uint8Array(evt.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    parseGrid(raw);
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function parseGrid(rows) {
+  gridData = { candidateName: '', slots: [], interviewers: {} };
+  let currentDay = '';
+  rows.forEach(row => {
+    if (!row || !row[0]) return;
+    const firstCell = String(row[0]).trim();
+    if (firstCell.toLowerCase().startsWith('candidate:')) {
+      gridData.candidateName = firstCell.replace(/^candidate:\s*/i, '').trim();
+      return;
+    }
+    if (firstCell === 'Interviewer Availability' || firstCell === '*Preferred Time') return;
+    if (/monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(firstCell)) {
+      currentDay = firstCell;
+      return;
+    }
+    if (/\d{1,2}:\d{2}\s*(AM|PM)/i.test(firstCell) && currentDay) {
+      const timeLabel = firstCell;
+      const slotKey = currentDay + ' | ' + timeLabel;
+      const names = [];
+      for (let c = 1; c < row.length; c++) {
+        const val = String(row[c] || '').trim();
+        if (val && val.toLowerCase() !== 'interviewer' && val !== '') {
+          const preferred = val.endsWith('*');
+          const name = val.replace(/\*$/, '').trim();
+          if (name) {
+            names.push({ name, preferred });
+            if (!gridData.interviewers[name.toLowerCase()]) {
+              gridData.interviewers[name.toLowerCase()] = { name, role: 'Interviewer', slots: [] };
+            }
+            gridData.interviewers[name.toLowerCase()].slots.push({ day: currentDay, time: timeLabel, key: slotKey, preferred });
+          }
+        }
+      }
+      gridData.slots.push({ day: currentDay, time: timeLabel, key: slotKey, interviewers: names });
+    }
+  });
+  renderMatchPreview();
+  renderCompetencyAssignment();
+}
+
+function renderMatchPreview() {
+  const el = document.getElementById('preview');
+  let html = '<p style="margin-bottom:6px;"><i class="fas fa-user" style="color:#ff9900;margin-right:6px;"></i><strong>Candidate:</strong> ' + (gridData.candidateName || 'Unknown') + '</p>';
+  html += '<p style="margin-bottom:10px;"><i class="fas fa-users" style="color:#ff9900;margin-right:6px;"></i><strong>Interviewers found:</strong> ' + Object.keys(gridData.interviewers).length + '</p>';
+  html += '<table><tr><th>Interviewer</th><th>Role</th><th>Available Slots</th><th>Preferred</th></tr>';
+  Object.values(gridData.interviewers).forEach(iv => {
+    const slotList = iv.slots.map(s => s.day + ' ' + s.time).join('<br>');
+    const prefList = iv.slots.filter(s => s.preferred).map(s => s.day + ' ' + s.time).join('<br>') || '—';
+    html += '<tr><td>' + iv.name + '</td><td>';
+    html += '<select onchange="setRole(\'' + iv.name.toLowerCase().replace(/'/g, "\\'") + '\', this.value)" style="padding:6px 10px;">';
+    html += '<option value="Interviewer"' + (iv.role === 'Interviewer' ? ' selected' : '') + '>Interviewer</option>';
+    html += '<option value="Hiring Manager"' + (iv.role === 'Hiring Manager' ? ' selected' : '') + '>Hiring Manager</option>';
+    html += '<option value="Bar Raiser"' + (iv.role === 'Bar Raiser' ? ' selected' : '') + '>Bar Raiser</option>';
+    html += '</select>';
+    html += '</td><td>' + slotList + '</td><td>' + prefList + '</td></tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+  document.getElementById('previewCard').style.display = 'block';
+}
+
+function setRole(key, role) {
+  if (gridData.interviewers[key]) gridData.interviewers[key].role = role;
+}
+
+function renderCompetencyAssignment() {
+  const el = document.getElementById('compAssign');
+  let html = '';
+  Object.values(gridData.interviewers).forEach((iv, idx) => {
+    html += '<div class="comp-row">';
+    html += '<span class="name-label">' + iv.name + '</span>';
+    for (let c = 0; c < 3; c++) {
+      const preselected = iv.competencies && iv.competencies[c] ? iv.competencies[c] : '';
+      html += '<select id="comp-' + idx + '-' + c + '" style="padding:6px 10px;">';
+      html += '<option value="">-- Select --</option>';
+      COMPETENCIES.forEach(comp => {
+        const sel = comp === preselected ? ' selected' : '';
+        html += '<option value="' + comp + '"' + sel + '>' + comp + '</option>';
+      });
+      html += '</select>';
+    }
+    html += '</div>';
+  });
+  el.innerHTML = html;
+  document.getElementById('compCard').style.display = 'block';
+  document.getElementById('loopCard').style.display = 'block';
+  document.getElementById('matchCard').style.display = 'block';
+}
+
+function importLoop() {
+  const statusEl = document.getElementById('pasteStatus');
+  const textBox = document.getElementById('loopPasteBox');
+  const text = textBox.value.trim();
+  if (!text) {
+    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Paste the loop data into the box first.';
+    statusEl.style.color = '#edbb34';
+    return;
+  }
+  try {
+    // Try readable format first: "HM: name1, name2 | Comp1, Comp2, Comp3"
+    const lines = text.split('\n').filter(l => l.trim());
+    const loopData = [];
+
+    for (const line of lines) {
+      const match = line.match(/^(HM|BR|IV):\s*(.+?)\s*\|\s*(.+)$/i);
+      if (match) {
+        const roleCode = match[1].toUpperCase();
+        const role = roleCode === 'HM' ? 'Hiring Manager' : roleCode === 'BR' ? 'Bar Raiser' : 'Interviewer';
+        const names = match[2].split(',').map(n => n.trim()).filter(Boolean);
+        const competencies = match[3].split(',').map(c => c.trim()).filter(Boolean);
+        const interviewers = names.filter(n => n !== '(unassigned)').map(n => ({ name: n, preferred: false }));
+        loopData.push({ role, competencies, interviewers });
+      }
+    }
+
+    // Fallback: try JSON
+    if (loopData.length === 0) {
+      const jsonData = JSON.parse(text);
+      if (Array.isArray(jsonData)) loopData.push(...jsonData);
+    }
+
+    if (loopData.length === 0) {
+      statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not parse loop data. Check the format.';
+      statusEl.style.color = '#edbb34';
+      return;
+    }
+
+    const interviewerKeys = Object.keys(gridData.interviewers);
+    loopData.forEach(interview => {
+      (interview.interviewers || []).forEach(loopIv => {
+        const matchKey = interviewerKeys.find(k =>
+          k.includes(loopIv.name.toLowerCase()) || loopIv.name.toLowerCase().includes(k)
+        );
+        if (matchKey) {
+          gridData.interviewers[matchKey].role = interview.role;
+          gridData.interviewers[matchKey].competencies = interview.competencies.slice(0, 3);
+        }
+      });
+    });
+    renderMatchPreview();
+    renderCompetencyAssignment();
+    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Loop imported! Roles & competencies updated.';
+    statusEl.style.color = '#48bb78';
+  } catch (e) {
+    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not parse. Check the format.';
+    statusEl.style.color = '#edbb34';
+  }
+}
+
+function matchSchedule() {
+  const statusEl = document.getElementById('matchStatus');
+  const interviewers = Object.values(gridData.interviewers);
+  interviewers.forEach((iv, idx) => {
+    iv.competencies = [];
+    for (let c = 0; c < 3; c++) {
+      const sel = document.getElementById('comp-' + idx + '-' + c);
+      if (sel && sel.value) iv.competencies.push(sel.value);
+    }
+  });
+  const missing = interviewers.filter(iv => iv.competencies.length < 3);
+  if (missing.length > 0) {
+    statusEl.innerHTML = '<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> Assign 3 competencies to: ' + missing.map(m => m.name).join(', ') + '</p>';
+    return;
+  }
+  const sorted = [...interviewers].sort((a, b) => {
+    if (a.role === 'Hiring Manager') return -1;
+    if (b.role === 'Hiring Manager') return 1;
+    return a.slots.length - b.slots.length;
+  });
+  const schedule = [];
+  const usedSlotKeys = new Set();
+  for (const iv of sorted) {
+    const preferred = iv.slots.filter(s => s.preferred);
+    const nonPreferred = iv.slots.filter(s => !s.preferred);
+    const ordered = [...preferred, ...nonPreferred];
+    let assigned = false;
+    for (const slot of ordered) {
+      if (!usedSlotKeys.has(slot.key)) {
+        schedule.push({ ...iv, assignedSlot: slot });
+        usedSlotKeys.add(slot.key);
+        assigned = true;
+        break;
+      }
+    }
+    if (!assigned) schedule.push({ ...iv, assignedSlot: null });
+  }
+  renderSchedule(schedule);
+}
+
+function renderSchedule(schedule) {
+  const el = document.getElementById('scheduleOutput');
+  const resultsDiv = document.getElementById('results');
+  const statusEl = document.getElementById('matchStatus');
+  const scheduled = schedule.filter(s => s.assignedSlot);
+  const unscheduled = schedule.filter(s => !s.assignedSlot);
+
+  let statusHtml = '';
+
+  if (scheduled.length > 0) {
+    statusHtml += '<p class="status status-success"><i class="fas fa-check-circle"></i> ' + scheduled.length + ' interviewer(s) scheduled: ' + scheduled.map(s => s.name).join(', ') + '</p>';
+  }
+
+  if (unscheduled.length > 0) {
+    unscheduled.forEach(u => {
+      const comps = u.competencies && u.competencies.length > 0 ? u.competencies.join(', ') : 'unknown';
+      statusHtml += '<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> Could not schedule <strong>' + u.name + '</strong> (' + u.role + '). Their available time slots overlap with already-assigned interviews. Uncovered competencies: ' + comps + '. Ask them to open up more hours.</p>';
+    });
+
+    if (scheduled.length > 0) {
+      statusHtml += '<p class="status" style="background:rgba(99,179,237,0.15);color:#63b3ed;border:1px solid rgba(99,179,237,0.3);"><i class="fas fa-info-circle"></i> The schedule below shows the ' + scheduled.length + ' confirmed interview(s). Fill the remaining slot(s) once more availability is provided.</p>';
+    }
+  }
+
+  statusEl.innerHTML = statusHtml;
+  const byDay = {};
+  scheduled.forEach(s => {
+    const day = s.assignedSlot.day;
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(s);
+  });
+  let html = '<h3><i class="fas fa-calendar-check" style="margin-right:8px;"></i>Final Schedule — ' + (gridData.candidateName || 'Candidate') + '</h3>';
+  Object.keys(byDay).forEach(day => {
+    const daySchedule = byDay[day].sort((a, b) => a.assignedSlot.time.localeCompare(b.assignedSlot.time));
+    html += '<table><tr><th>' + day + '</th><th>Interviewer</th><th>Competency</th><th>Competency</th><th>Competency</th></tr>';
+    daySchedule.forEach(s => {
+      const roleClass = s.role === 'Hiring Manager' ? 'tag-hm' : s.role === 'Bar Raiser' ? 'tag-br' : '';
+      const roleLabel = s.role !== 'Interviewer' ? ' <span class="tag ' + roleClass + '">' + s.role + '</span>' : '';
+      html += '<tr><td><strong>' + s.assignedSlot.time + '</strong></td>';
+      html += '<td>' + s.name + roleLabel + '</td>';
+      s.competencies.forEach(c => { html += '<td><span class="tag tag-comp">' + c + '</span></td>'; });
+      for (let i = s.competencies.length; i < 3; i++) html += '<td>—</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+  });
+  html += '<button class="copy-btn" onclick="copySchedule()" style="margin-top:14px;"><i class="fas fa-copy"></i> Copy to Clipboard</button>';
+  el.innerHTML = html;
+  resultsDiv.style.display = 'block';
+}
+
+function copySchedule() {
+  const tables = document.querySelectorAll('#scheduleOutput table');
+  let text = 'Final Schedule — ' + (gridData.candidateName || 'Candidate') + '\n\n';
+  tables.forEach(table => {
+    table.querySelectorAll('tr').forEach(row => {
+      const cells = row.querySelectorAll('th, td');
+      text += Array.from(cells).map(c => c.innerText.trim()).join('\t') + '\n';
+    });
+    text += '\n';
+  });
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard', 2000);
+  });
+}
+</script>
+</body>
+</html>
