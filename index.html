@@ -638,6 +638,16 @@ function setRole(key, role) {
 }
 
 function renderCompetencyAssignment() {
+  // Build full competency list including any from loop import
+  var allComps = COMPETENCIES.slice();
+  Object.values(gridData.interviewers).forEach(function(iv) {
+    if (iv.competencies) {
+      iv.competencies.forEach(function(c) {
+        if (allComps.indexOf(c) === -1) allComps.push(c);
+      });
+    }
+  });
+
   const el = document.getElementById('compAssign');
   let html = '';
   Object.values(gridData.interviewers).forEach((iv, idx) => {
@@ -647,7 +657,7 @@ function renderCompetencyAssignment() {
       const preselected = iv.competencies && iv.competencies[c] ? iv.competencies[c] : '';
       html += '<select id="comp-' + idx + '-' + c + '" style="padding:6px 10px;">';
       html += '<option value="">-- Select --</option>';
-      COMPETENCIES.forEach(comp => {
+      allComps.forEach(comp => {
         const sel = comp === preselected ? ' selected' : '';
         html += '<option value="' + comp + '"' + sel + '>' + comp + '</option>';
       });
