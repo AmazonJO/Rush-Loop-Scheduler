@@ -557,6 +557,7 @@ const COMPETENCIES = [
 ];
 
 let gridData = { candidateName: '', slots: [], interviewers: {} };
+let loopStructure = []; // Stores the loop slots from Hire import
 
 document.getElementById('fileInput').addEventListener('change', function (e) {
   const file = e.target.files[0];
@@ -691,7 +692,7 @@ function importLoop() {
         const roleCode = match[1].toUpperCase();
         const role = roleCode === 'HM' ? 'Hiring Manager' : roleCode === 'BR' ? 'Bar Raiser' : 'Interviewer';
         const names = match[2].split(',').map(n => n.trim()).filter(Boolean);
-        const competencies = match[3].split(',').map(c => c.trim()).filter(Boolean);
+        const competencies = match[3].split(';').map(c => c.trim()).filter(Boolean);
         const interviewers = names.filter(n => n !== '(unassigned)').map(n => ({ name: n, preferred: false }));
         loopData.push({ role, competencies, interviewers });
       }
@@ -710,6 +711,9 @@ function importLoop() {
     }
 
     const interviewerKeys = Object.keys(gridData.interviewers);
+    // Save loop structure for slot-based matching
+    loopStructure = loopData;
+
     loopData.forEach(interview => {
       (interview.interviewers || []).forEach(loopIv => {
         const matchKey = interviewerKeys.find(k =>
@@ -734,6 +738,8 @@ function importLoop() {
 function matchSchedule() {
   const statusEl = document.getElementById('matchStatus');
   const interviewers = Object.values(gridData.interviewers);
+
+  // Gather competencies from dropdowns
   interviewers.forEach((iv, idx) => {
     iv.competencies = [];
     for (let c = 0; c < 3; c++) {
@@ -741,11 +747,96 @@ function matchSchedule() {
       if (sel && sel.value) iv.competencies.push(sel.value);
     }
   });
-  const missing = interviewers.filter(iv => iv.competencies.length < 3);
-  if (missing.length > 0) {
-    statusEl.innerHTML = '<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> Assign 3 competencies to: ' + missing.map(m => m.name).join(', ') + '</p>';
-    return;
+
+  // If we have loop structure, match by interview slots
+  if (loopStructure.length > 0) {
+    matchBySlots(statusEl, interviewers);
+  } else {
+    // Fallback: old behavior for manual competency assignment
+    const missing = interviewers.filter(iv => iv.competencies.length < 3);
+    if (missing.length > 0) {
+      statusEl.innerHTML = '<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> Assign 3 competencies to: ' + missing.map(m => m.name).join(', ') + '</p>';
+      return;
+    }
+    matchByPeople(statusEl, interviewers);
   }
+}
+
+function matchBySlots(statusEl, interviewers) {
+  const schedule = [];
+  const usedPeople = new Set();
+  const usedSlotKeys = new Set();
+  const warnings = [];
+
+  // Sort loop slots: HM first, then by number of available candidates (least first)
+  const sortedSlots = [...loopStructure].sort((a, b) => {
+    if (a.role === 'Hiring Manager') return -1;
+    if (b.role === 'Hiring Manager') return 1;
+    return (a.interviewers || []).length - (b.interviewers || []).length;
+  });
+
+  const interviewerKeys = Object.keys(gridData.interviewers);
+
+  sortedSlots.forEach((loopSlot, idx) => {
+    // Check if BR is unassigned
+    if (loopSlot.role === 'Bar Raiser' && (!loopSlot.interviewers || loopSlot.interviewers.length === 0)) {
+      warnings.push('<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> <strong>Interview ' + (idx + 1) + ' (Bar Raiser)</strong> — No BR assigned yet. Cannot schedule this slot until a BR is identified.</p>');
+      return;
+    }
+
+    // Find matching people from the availability grid
+    const candidates = [];
+    (loopSlot.interviewers || []).forEach(loopIv => {
+      const matchKey = interviewerKeys.find(k =>
+        (k.includes(loopIv.name.toLowerCase()) || loopIv.name.toLowerCase().includes(k)) && !usedPeople.has(k)
+      );
+      if (matchKey && gridData.interviewers[matchKey]) {
+        candidates.push(gridData.interviewers[matchKey]);
+      }
+    });
+
+    if (candidates.length === 0) {
+      warnings.push('<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> <strong>' + loopSlot.role + ' slot</strong> (' + loopSlot.competencies.join(', ') + ') — No available interviewers found for this slot.</p>');
+      return;
+    }
+
+    // Sort candidates by least availability
+    candidates.sort((a, b) => a.slots.length - b.slots.length);
+
+    // Try to assign a candidate to a time slot
+    let assigned = false;
+    for (const candidate of candidates) {
+      const preferred = candidate.slots.filter(s => s.preferred);
+      const nonPreferred = candidate.slots.filter(s => !s.preferred);
+      const ordered = [...preferred, ...nonPreferred];
+
+      for (const slot of ordered) {
+        if (!usedSlotKeys.has(slot.key)) {
+          schedule.push({
+            name: candidate.name,
+            role: loopSlot.role,
+            competencies: loopSlot.competencies,
+            assignedSlot: slot
+          });
+          usedSlotKeys.add(slot.key);
+          usedPeople.add(Object.keys(gridData.interviewers).find(k => gridData.interviewers[k] === candidate));
+          assigned = true;
+          break;
+        }
+      }
+      if (assigned) break;
+    }
+
+    if (!assigned) {
+      const names = candidates.map(c => c.name).join(', ');
+      warnings.push('<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> <strong>' + loopSlot.role + ' slot</strong> (' + loopSlot.competencies.join(', ') + ') — ' + names + ' available but all time slots conflict with already-assigned interviews. Ask them to open up more hours.</p>');
+    }
+  });
+
+  renderSchedule(schedule, warnings);
+}
+
+function matchByPeople(statusEl, interviewers) {
   const sorted = [...interviewers].sort((a, b) => {
     if (a.role === 'Hiring Manager') return -1;
     if (b.role === 'Hiring Manager') return 1;
@@ -768,10 +859,10 @@ function matchSchedule() {
     }
     if (!assigned) schedule.push({ ...iv, assignedSlot: null });
   }
-  renderSchedule(schedule);
+  renderSchedule(schedule, []);
 }
 
-function renderSchedule(schedule) {
+function renderSchedule(schedule, warnings) {
   const el = document.getElementById('scheduleOutput');
   const resultsDiv = document.getElementById('results');
   const statusEl = document.getElementById('matchStatus');
@@ -781,7 +872,12 @@ function renderSchedule(schedule) {
   let statusHtml = '';
 
   if (scheduled.length > 0) {
-    statusHtml += '<p class="status status-success"><i class="fas fa-check-circle"></i> ' + scheduled.length + ' interviewer(s) scheduled: ' + scheduled.map(s => s.name).join(', ') + '</p>';
+    statusHtml += '<p class="status status-success"><i class="fas fa-check-circle"></i> ' + scheduled.length + ' of 5 interview(s) scheduled: ' + scheduled.map(s => s.name).join(', ') + '</p>';
+  }
+
+  // Show warnings from slot-based matching
+  if (warnings && warnings.length > 0) {
+    statusHtml += warnings.join('');
   }
 
   if (unscheduled.length > 0) {
@@ -789,10 +885,10 @@ function renderSchedule(schedule) {
       const comps = u.competencies && u.competencies.length > 0 ? u.competencies.join(', ') : 'unknown';
       statusHtml += '<p class="status status-warning"><i class="fas fa-exclamation-triangle"></i> Could not schedule <strong>' + u.name + '</strong> (' + u.role + '). Their available time slots overlap with already-assigned interviews. Uncovered competencies: ' + comps + '. Ask them to open up more hours.</p>';
     });
+  }
 
-    if (scheduled.length > 0) {
-      statusHtml += '<p class="status" style="background:rgba(99,179,237,0.15);color:#63b3ed;border:1px solid rgba(99,179,237,0.3);"><i class="fas fa-info-circle"></i> The schedule below shows the ' + scheduled.length + ' confirmed interview(s). Fill the remaining slot(s) once more availability is provided.</p>';
-    }
+  if (scheduled.length < 5) {
+    statusHtml += '<p class="status" style="background:rgba(99,179,237,0.15);color:#63b3ed;border:1px solid rgba(99,179,237,0.3);"><i class="fas fa-info-circle"></i> ' + scheduled.length + ' of 5 interviews confirmed. Fill remaining slot(s) once more availability or a BR is provided.</p>';
   }
 
   statusEl.innerHTML = statusHtml;
