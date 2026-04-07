@@ -692,7 +692,7 @@ function importLoop() {
         const roleCode = match[1].toUpperCase();
         const role = roleCode === 'HM' ? 'Hiring Manager' : roleCode === 'BR' ? 'Bar Raiser' : 'Interviewer';
         const names = match[2].split(',').map(n => n.trim()).filter(Boolean);
-        const competencies = match[3].split(';').map(c => c.trim()).filter(Boolean);
+        const competencies = match[3].split('~~').map(c => c.trim()).filter(Boolean);
         const interviewers = names.filter(n => n !== '(unassigned)').map(n => ({ name: n, preferred: false }));
         loopData.push({ role, competencies, interviewers });
       }
