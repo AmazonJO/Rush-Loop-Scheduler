@@ -593,7 +593,7 @@ function parseGrid(rows) {
       const names = [];
       for (let c = 1; c < row.length; c++) {
         const val = String(row[c] || '').trim();
-        if (val && val.toLowerCase() !== 'interviewer' && val !== '') {
+        if (val && !/^interviewer/i.test(val) && val !== '') {
           const preferred = val.endsWith('*');
           const name = val.replace(/\*$/, '').trim();
           if (name) {
