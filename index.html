@@ -928,7 +928,10 @@ function renderSchedule(schedule, warnings) {
     });
     html += '</table>';
   });
-  html += '<button class="copy-btn" onclick="copySchedule()" style="margin-top:14px;"><i class="fas fa-copy"></i> Copy to Clipboard</button>';
+  html += '<div style="display:flex;gap:10px;margin-top:14px;">';
+  html += '<button class="copy-btn" onclick="copySchedule()"><i class="fas fa-copy"></i> Copy as Text</button>';
+  html += '<button class="copy-btn" onclick="copyScheduleFormatted()" style="background:#ff9900;color:#111;font-weight:700;"><i class="fas fa-table"></i> Copy as Formatted Table</button>';
+  html += '</div>';
   el.innerHTML = html;
   resultsDiv.style.display = 'block';
 }
@@ -944,9 +947,42 @@ function copySchedule() {
     text += '\n';
   });
   navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('.copy-btn');
+    const btn = document.querySelectorAll('.copy-btn')[0];
     btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-    setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard', 2000);
+    setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy as Text', 2000);
+  });
+}
+
+function copyScheduleFormatted() {
+  const tables = document.querySelectorAll('#scheduleOutput table');
+  var html = '<div style="font-family:Segoe UI,Arial,sans-serif;">';
+  html += '<h3 style="color:#232f3e;">Final Schedule — ' + (gridData.candidateName || 'Candidate') + '</h3>';
+  tables.forEach(function(table) {
+    html += '<table style="border-collapse:collapse;width:100%;margin-bottom:16px;font-size:13px;">';
+    var rows = table.querySelectorAll('tr');
+    for (var r = 0; r < rows.length; r++) {
+      html += '<tr>';
+      var cells = rows[r].querySelectorAll('th, td');
+      for (var c = 0; c < cells.length; c++) {
+        var tag = cells[c].tagName === 'TH' ? 'th' : 'td';
+        var bg = tag === 'th' ? '#ff9900' : (r % 2 === 0 ? '#ffffff' : '#f9f9f9');
+        var color = tag === 'th' ? '#111111' : '#333333';
+        var fw = tag === 'th' ? 'bold' : 'normal';
+        html += '<' + tag + ' style="border:1px solid #cccccc;padding:8px 12px;background:' + bg + ';color:' + color + ';font-weight:' + fw + ';">';
+        html += cells[c].innerText.trim();
+        html += '</' + tag + '>';
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+  });
+  html += '</div>';
+  var blob = new Blob([html], { type: 'text/html' });
+  var item = new ClipboardItem({ 'text/html': blob });
+  navigator.clipboard.write([item]).then(function() {
+    var btn = document.querySelectorAll('.copy-btn')[1];
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-table"></i> Copy as Formatted Table'; }, 2000);
   });
 }
 </script>
