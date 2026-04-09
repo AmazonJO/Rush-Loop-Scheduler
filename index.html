@@ -285,6 +285,10 @@
     <div class="card" id="compCard" style="display:none;">
       <h2><span class="step">4</span><i class="fas fa-list-check"></i> Assign Competencies</h2>
       <p class="info"><i class="fas fa-info-circle"></i> Select 3 competencies per interviewer. If imported from Hire, these may already be filled.</p>
+      <div style="margin-top:10px;margin-bottom:14px;display:flex;gap:10px;align-items:center;">
+        <input type="text" id="customCompInput" placeholder="Add a custom competency (e.g. Coding, Science Depth)" style="flex:1;padding:10px 14px;" />
+        <button class="btn-sm" onclick="addCustomCompetency()"><i class="fas fa-plus"></i> Add</button>
+      </div>
       <div id="compAssign" style="margin-top:14px;"></div>
     </div>
 
@@ -521,9 +525,9 @@ function generateTemplate() {
     const dayLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     const dayRow = [dayLabel];
     for (let i = 0; i < numCols; i++) {
-      if (i === 0) dayRow.push('Interviewer 1 (HM)');
-      else if (i === 1) dayRow.push('Interviewer 2 (BR)');
-      else dayRow.push('Interviewer ' + (i + 1));
+      if (i === 0) dayRow.push('Interviewer (HM)');
+      else if (i === 1) dayRow.push('Interviewer (BR)');
+      else dayRow.push('Interviewer');
     }
     rows.push(dayRow);
     selectedDates[dateStr].forEach(h => {
@@ -636,6 +640,17 @@ function renderMatchPreview() {
 
 function setRole(key, role) {
   if (gridData.interviewers[key]) gridData.interviewers[key].role = role;
+}
+
+function addCustomCompetency() {
+  var input = document.getElementById('customCompInput');
+  var val = input.value.trim();
+  if (!val) return;
+  if (COMPETENCIES.indexOf(val) === -1) {
+    COMPETENCIES.push(val);
+  }
+  input.value = '';
+  renderCompetencyAssignment();
 }
 
 function renderCompetencyAssignment() {
