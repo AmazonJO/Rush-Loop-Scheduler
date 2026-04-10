@@ -271,6 +271,7 @@
       <h2><span class="step">1</span><i class="fas fa-file-upload"></i> Upload Availability</h2>
       <label for="fileInput" class="file-upload-btn"><i class="fas fa-folder-open"></i> Choose File</label>
       <span id="fileName" class="file-upload-name">No file selected</span>
+      <button id="clearFileBtn" class="btn-sm" onclick="clearFile()" style="display:none;margin-left:8px;background:#f56565;color:#fff;"><i class="fas fa-times"></i> Clear</button>
       <input type="file" id="fileInput" accept=".xlsx,.xls" />
       <p class="info"><i class="fas fa-info-circle"></i> This should be the template after interviewers have added their names.</p>
     </div>
@@ -585,6 +586,7 @@ document.getElementById('fileInput').addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (!file) return;
   document.getElementById('fileName').textContent = file.name;
+  document.getElementById('clearFileBtn').style.display = 'inline-flex';
   const reader = new FileReader();
   reader.onload = function (evt) {
     const data = new Uint8Array(evt.target.result);
@@ -659,6 +661,21 @@ function renderMatchPreview() {
 
 function setRole(key, role) {
   if (gridData.interviewers[key]) gridData.interviewers[key].role = role;
+}
+
+function clearFile() {
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileName').textContent = 'No file selected';
+  document.getElementById('clearFileBtn').style.display = 'none';
+  document.getElementById('preview').innerHTML = '';
+  document.getElementById('previewCard').style.display = 'none';
+  document.getElementById('compAssign').innerHTML = '';
+  document.getElementById('compCard').style.display = 'none';
+  document.getElementById('matchCard').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('matchStatus').innerHTML = '';
+  document.getElementById('scheduleOutput').innerHTML = '';
+  gridData = { candidateName: '', slots: [], interviewers: {} };
 }
 
 function addCustomCompetency() {
