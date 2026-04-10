@@ -71,7 +71,8 @@
     .container { max-width: 1000px; margin: 0 auto; }
 
     /* Theme toggle */
-    .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 999; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; transition: all 0.2s; }
+    .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 999; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 18px; transition: all 0.2s; }
+    .theme-toggle span { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
     .theme-toggle:hover { border-color: #ff9900; }
 
     /* Header */
@@ -171,6 +172,7 @@
 <div class="container">
   <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
     <i class="fas fa-sun" id="themeIcon"></i>
+    <span id="themeLabel">Light Mode</span>
   </div>
 
   <div class="header">
@@ -316,11 +318,14 @@
 function toggleTheme() {
   document.body.classList.toggle('light');
   const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
   if (document.body.classList.contains('light')) {
     icon.className = 'fas fa-moon';
+    label.textContent = 'Dark Mode';
     localStorage.setItem('theme', 'light');
   } else {
     icon.className = 'fas fa-sun';
+    label.textContent = 'Light Mode';
     localStorage.setItem('theme', 'dark');
   }
 }
@@ -328,6 +333,7 @@ function toggleTheme() {
 if (localStorage.getItem('theme') === 'light') {
   document.body.classList.add('light');
   document.getElementById('themeIcon').className = 'fas fa-moon';
+  document.getElementById('themeLabel').textContent = 'Dark Mode';
 }
 
 // ========== TIMEZONE SELECTOR ==========
@@ -516,6 +522,14 @@ function generateTemplate() {
   const tz = document.getElementById('candTz').value;
   const numCols = parseInt(document.getElementById('numCols').value) || 7;
   const rows = [];
+
+  // Instructions
+  rows.push(['INSTRUCTIONS:']);
+  rows.push(['1. Type your DISPLAY NAME (as shown in Hire) next to the time slots you are available. Add * for preferred times (e.g. Wei Niu*)']);
+  rows.push(['2. HM and BR: enter your name in the designated column. All others can use any "Interviewer" column.']);
+  rows.push(['3. Please identify all your available times across all days to aide in scheduling.']);
+  rows.push([]);
+
   const candRow = ['Candidate: ' + candName];
   rows.push(candRow);
   rows.push([]);
